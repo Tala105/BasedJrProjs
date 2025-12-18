@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset='utf-8'>
+		<meta http-equiv='X-UA-Compatible' content='IE=edge'>
+		<title>Opening Tree</title>
+		<meta name='viewport' content='width=devide-width, initial-scale=1'>
+		<!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
+	</head>
+
+	<body style="background-color:  #ddccee; margin: 0;">
+		{% include 'navbar.html' %}
+
+		{% block content %}
+
+		{% endblock %}
+
+	</body>
+
+
+	<style>
+		a:link {
+			color: blue;
+			background-color: transparent;
+			text-decoration: none;
+		}
+
+		a:visited {
+			color: blue;
+			background-color: transparent;
+			text-decoration: none;
+		}
+
+		a:hover {
+			color: red;
+			background-color: transparent;
+			text-decoration: underline;
+		}
+
+		a:active {
+			color: green;
+			background-color: transparent;
+			text-decoration: underline;
+		}
+	</style>
+</html>

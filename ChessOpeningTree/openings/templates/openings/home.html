@@ -1,0 +1,14 @@
+{% extends 'main.html' %}
+
+	{% block content %}
+	<h1 style="text-align: center; color: #774421">Home Page</h1>
+	<div>
+		<h4> <a href="{% url 'first_move' %}"> New Line</a></h4>
+		{% for id, line in moves.items %}
+			<div>
+				<h5>{{id}} -- <a href="{% url 'position' id %}">{{line}}</a></h5>
+			</div>
+		{% endfor %}
+	</div>
+
+	{% endblock %}
