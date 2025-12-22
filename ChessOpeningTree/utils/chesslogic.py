@@ -21,15 +21,20 @@ treelib.createBoard.restype = (board)
 treelib.makeMove.argtypes = (board, POINTER(c_int))
 treelib.makeMove.restype = (board)
 
-treelib.nameToMove.argtypes = (board, c_char_p)
-treelib.nameToMove.restype = (POINTER(c_int))
+treelib.nameToMove.argtypes = (board, c_char_p, POINTER(c_int))
 
-def make_move(b, move):
-    return treelib.makeMove(b, move)
+def make_move(boardstate, move):
+    b = board(boardstate.encode("utf-8"))
+    nboard = treelib.makeMove(b, (c_int*5)(*(int(x) for x in move)))
+    return nboard.state.decode("utf-8")
 
-def nameToMove(move):
-    treelib.nameToMove(move)
-    return move
+def nameToMove(boardstate, movename):
+    print(boardstate)
+    print(movename)
+    move = (c_int * 5)(*[-1]*5)
+    b = board(boardstate.encode("utf-8"))
+    treelib.nameToMove(b, movename.encode("utf-8"), move)
+    return list(move)
 
 if __name__ == "__main__":
     curr_line = 0

@@ -6,7 +6,7 @@
 		<h4> <a href="{% url 'first_move' %}"> New Line</a></h4>
 		{% for id, line in moves.items %}
 			<div>
-				<h5>{{id}} -- <a href="{% url 'position' id %}">{{line}}</a></h5>
+			<h5>{{forloop.counter}} -- <a href="{% url 'position' id %}?line={{line}}">{{line}}</a></h5>
 			</div>
 		{% endfor %}
 	</div>

@@ -7,7 +7,7 @@ def makeStartingPosition(apps, schema_editor):
     Position = apps.get_model("openings", "Position")
     Position.objects.update_or_create(
         id=UUID("00000000-0000-0000-0000-000000000000"),
-        defaults={"board": "SNBQJBNSPPPPPPPP                                ppppppppsnbqjbns0@"}
+        defaults={"board": "snbqjbnspppppppp                                PPPPPPPPSNBQJBNS0@"}
     )
 
 class Migration(migrations.Migration):

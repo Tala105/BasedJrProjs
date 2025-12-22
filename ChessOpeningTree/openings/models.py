@@ -1,5 +1,4 @@
 from django.db import models
-from utils.chesslogic import make_move, nameToMove
 import uuid
 
 class Position(models.Model):
@@ -15,9 +14,8 @@ class Move(models.Model):
     comment = models.CharField(max_length=250)
     move = models.CharField(max_length=16)
 
-    def save(self, *args, **kwargs):
-        move = nameToMove(self.move)
-        self.child = make_move(self.parent, move)
-        super().save(*args, **kwargs)
-
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['line', 'parent', 'child'], name='unique_line_parent_child')
+        ]
 # Create your models here.
