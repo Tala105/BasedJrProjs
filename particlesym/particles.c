@@ -1,86 +1,66 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <time.h>
+#include "particles.h"
 
-#define true 1
-#define false 0
-#define SIZE 16
+typedef struct board{
+	particle **particles;
+	float **fieldx;
+	float **fieldy;
+}board;
 
-typedef int bool;
 
-typedef struct particle{
-	float speed;
-	float offset;
-	int exists;
-	int closed;
-}particle;
+int ROW = 0, COL = 0;
 
-void printParticles(particle particles[SIZE][SIZE]){
-	for(int row=SIZE-1; row>=0; row--){
-		for(int col=0; col<SIZE; col++){
-			if (particles[row][col].exists) printf("o");
-			else printf(" ");
-		}
-		printf("\n");
-	}
+void spawnParticle(particle **particles, int row, int col, unsigned int mass, int color){
+	if (col<0)
+		col = rand()%COL;
+	if (row<0)
+		row = rand()%ROW;
+	particle baseparticle = {.mass = mass, .speedx = 0, .speedy = 0, .acelx=0, .acely=-1, .exists = true, .color=color};
+
+	particles[row][col] = baseparticle;
 }
 
-void spawnParticle(particle particles[SIZE][SIZE]){
-	int pos = rand()%SIZE;
-	particle baseparticle = {.speed = 1, .exists = true, .closed = false};
-
-	if (rand()%3==1) particles[SIZE-1][pos] = baseparticle;
+void swap(particle *a, particle *b, int row){
+	particle t = *a;
+	*a = *b;
+	*b = t;
 }
 
-void particleStep(particle particles[SIZE][SIZE]){
-	int left, right;
-	for(int row=1; row<SIZE; row++){
-		for(int col=0; col<SIZE; col++){
-			if(particles[row][col].exists && !particles[row][col].closed){
-				right=left=false;
-				if (!particles[row-1][col].exists){
-					particles[row-1][col] = particles[row][col];
-					particles[row][col] = (particle){0};
-				}
-				else if(col>0 && !particles[row-1][col-1].exists) left = true;
-				else if(col<SIZE-1 && !particles[row-1][col+1].exists) right = true;
-				else particles[row][col].closed = true;
+void particleStep(particle **particles, bool slides){
+	bool down, left, right;
+	particle *p, *d, *l, *r;
+	for(int row=1; row<ROW; row++){
+		for(int col=0; col<COL; col++){
+			down=right=left=false;
+			d=l=r=&(particle){.exists=false, .mass=0};
 
-				if(right && left){
-					if(rand()%2) right = false;
-					else left = false;
-				}
-				else if(left){
-					particles[row-1][col-1] = particles[row][col];
-					particles[row][col] = (particle){0};
-				}
-				else if(right){
-					particles[row-1][col+1] = particles[row][col];
-					particles[row][col] = (particle){0};
-				}
+			p = &particles[row][col];
+			d = &particles[row-1][col];
+			if(col>0) l = &particles[row-1][col-1];
+			if(col<COL-1) r = &particles[row-1][col+1];
 
-				if(row==0)
-					particles[row][col].closed = true;
+			if(slides && p->exists){
+				if (!d->exists || p->mass > d->mass) down = true;
+				if(col>0 && (!l->exists || p->mass > l->mass)) left = true;
+				if(col<COL-1 && (!r->exists || p->mass > r->mass)) right = true;
 			}
+			else if(p->exists){
+				if(!d->exists || p->mass > d->mass) down = true;
+				if(d->color == 0x000000){
+					if(col>0 && (!l->exists|| p->mass > l->mass)) left = true;
+					if(col<COL-1 && (!r->exists || p->mass > r->mass)) right = true;
+				}
+			}
+			if(down) swap(p, d, row);
+			else{
+				if(right && left){
+				if(rand()%2) right = false;
+				else left = false;
+				}
+			
+				if(left) swap(p, l, row);
+				else if(right) swap(p, r, row);
+				}
 		}
 	}
 }
 
-int main(){
-	particle particles[SIZE][SIZE] = {0};
-	int stuckparticles = 0, pos;
-	char stop;
-	srand(time(NULL));
-	spawnParticle(particles);
-
-	printParticles(particles);
-	while(true){
-		system("clear");
-		particleStep(particles);
-		spawnParticle(particles);
-		printParticles(particles);
-		usleep(250000);
-	}
-	return 0;
-}
