@@ -1,6 +1,7 @@
 #include "particles.h"
 #include <X11/Xlib.h>
 
+#define SIZE 3
 #define FPS 15
 #define FRAME_TIME (CLOCKS_PER_SEC / FPS)
 
@@ -50,7 +51,6 @@ unsigned int getColorIndex(unsigned int color){
 
 int main(int argc, char *argv[]){
 
-	bool bean = false;
 	int spawn_col=-1;
     clock_t last = clock();
 	unsigned int color = colors[0];
@@ -58,49 +58,45 @@ int main(int argc, char *argv[]){
 	build_cdf(cdf);
 
 	if(argc > 2){
-		COL = atoi(argv[1]);
-		ROW = atoi(argv[2]);
-		if(argc > 3){
-			bean = true;
-			spawn_col = COL/2;
-		}
+		COL = atoi(argv[1])/SIZE;
+		ROW = atoi(argv[2])/SIZE;
 	}
 	else exit(-1);
 
-	particle **particles = malloc(ROW * sizeof(particle *));
-	for (int i = 0; i < ROW; i++)
-		particles[i] = calloc(COL, sizeof(particle));
+	board b;
+	b.particles = malloc(ROW * sizeof(particle *));
+	b.fieldx = malloc(ROW * sizeof(float *));
+	b.fieldy = malloc(ROW * sizeof(float *));
+	for (int i = 0; i < ROW; i++){
+		b.particles[i] = calloc(COL, sizeof(particle));
+		b.fieldx[i] = calloc(COL, sizeof(float));
+		b.fieldy[i] = calloc(COL, sizeof(float));
+	}
 	srand(time(NULL));
-
-	if(bean)
-		for(int row=ROW-2; row>ROW/2; row--)
-			for(int col=0; col<COL; col++)
-				if(row%2==col%2)
-					spawnParticle(particles, row, col, 0, 0x000000);
 
     Display *dpy = XOpenDisplay(NULL);
 	if (!dpy) return 1;
 	Window root = DefaultRootWindow(dpy);
 	GC gc = XCreateGC(dpy, root, 0, NULL);
-	Pixmap buffer = XCreatePixmap(dpy, root, COL, ROW, DefaultDepth(dpy, DefaultScreen(dpy)));
+	Pixmap buffer = XCreatePixmap(dpy, root, SIZE*COL, SIZE*ROW, DefaultDepth(dpy, DefaultScreen(dpy)));
 
 	int i = 0, spawn_amount = 0;
 	unsigned int mass = 0;
 	while(i<2*1e7){
 		XSetForeground(dpy, gc, 0x000000);
-		XFillRectangle(dpy, buffer, gc, 0, 0, COL+1, ROW+1);
+		XFillRectangle(dpy, buffer, gc, 0, 0, SIZE*COL+1, SIZE*ROW+1);
 		for (int i = 0; i < ROW; i++)
 			for (int j = 0; j < COL; j++)
-				if (particles[i][j].exists){
-					XSetForeground(dpy, gc, particles[i][j].color);
-                    XFillRectangle(dpy, buffer, gc, j, ROW-i-1, 1, 1);
-				}
-		particleStep(particles, !bean);
+				if (b.particles[i][j].exists){
+					XSetForeground(dpy, gc, b.particles[i][j].color);
+					XFillRectangle(dpy, buffer, gc, j*SIZE, (ROW-i-1)*SIZE, SIZE, SIZE);
+					}
+		particleStep(&b);
 		color = setColor(i, cdf);
 		mass = getColorIndex(color)+1;
-		spawn_amount = rand()%(COL/96);
+		spawn_amount = rand()%(COL/48);
 		for(int j=0; j<spawn_amount; j++)
-			spawnParticle(particles, ROW-1, spawn_col, mass, color);
+			spawnParticle(b.particles, ROW-1, spawn_col, mass, color);
 
 		clock_t now = clock();
         clock_t elapsed = now - last;
@@ -109,12 +105,12 @@ int main(int argc, char *argv[]){
         }
         last = clock();
 		i+=spawn_amount;
-		XCopyArea(dpy, buffer, root, gc, 0, 0, COL, ROW, 1920, 0);
+		XCopyArea(dpy, buffer, root, gc, 0, 0, SIZE*COL, SIZE*ROW+1, 1920, 0);
 		XFlush(dpy);
 	}
 
-	for(int i=0; i<ROW; i++) free(particles[i]);
-	free(particles);
+	for(int i=0; i<ROW; i++) free(b.particles[i]);
+	free(b.particles);
 	free(cdf);
 
 	XFreePixmap(dpy, buffer);

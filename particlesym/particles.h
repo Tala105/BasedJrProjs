@@ -12,12 +12,17 @@ typedef struct particle{
 	float acely;
 	float speedx;
 	float speedy;
-	float offset;
 	bool exists;
-	int color;
+	char color;
 }particle;
+
+typedef struct board{
+	particle **particles;
+	float **fieldx;
+	float **fieldy;
+}board;
 
 extern int ROW, COL;
 
 void spawnParticle(particle **particles, int row, int col, unsigned int mass, int color);
-void particleStep(particle **particles, bool slides);
+void particleStep(board *b);
