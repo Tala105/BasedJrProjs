@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -13,7 +14,8 @@ typedef struct particle{
 	float speedx;
 	float speedy;
 	bool exists;
-	char color;
+	bool closed;
+	unsigned long color;
 }particle;
 
 typedef struct board{
@@ -24,5 +26,7 @@ typedef struct board{
 
 extern int ROW, COL;
 
-void spawnParticle(particle **particles, int row, int col, unsigned int mass, int color);
+board initBoard();
+void spawnParticle(board *b, int row, int col, float mass, int color);
 void particleStep(board *b);
+void initOrders();

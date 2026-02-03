@@ -1,7 +1,7 @@
 #include "particles.h"
 #include <X11/Xlib.h>
 
-#define SIZE 3
+#define SIZE 2
 #define FPS 15
 #define FRAME_TIME (CLOCKS_PER_SEC / FPS)
 
@@ -26,7 +26,7 @@ int total;
 void build_cdf(int *cdf) {
     total = 0;
     for(int k=0;k<COLOR_AMOUNT;k++){
-        total += (k+1)*(k+1);
+        total += pow(M_E, k+1);
         cdf[k] = total;
     }
 }
@@ -39,7 +39,8 @@ int sample_cdf(int *cdf, int idx_max){
 }
 
 unsigned int setColor(int i, int *cdf){
-	int idx = ((i%(50000*COLOR_AMOUNT))/50000)%COLOR_AMOUNT;
+	int pam = 25000/SIZE;
+	int idx = ((i%(pam*COLOR_AMOUNT))/pam)%COLOR_AMOUNT;
 	return colors[sample_cdf(cdf, idx)];
 }
 
@@ -62,16 +63,9 @@ int main(int argc, char *argv[]){
 		ROW = atoi(argv[2])/SIZE;
 	}
 	else exit(-1);
+	initOrders();
 
-	board b;
-	b.particles = malloc(ROW * sizeof(particle *));
-	b.fieldx = malloc(ROW * sizeof(float *));
-	b.fieldy = malloc(ROW * sizeof(float *));
-	for (int i = 0; i < ROW; i++){
-		b.particles[i] = calloc(COL, sizeof(particle));
-		b.fieldx[i] = calloc(COL, sizeof(float));
-		b.fieldy[i] = calloc(COL, sizeof(float));
-	}
+	board b = initBoard();
 	srand(time(NULL));
 
     Display *dpy = XOpenDisplay(NULL);
@@ -81,22 +75,23 @@ int main(int argc, char *argv[]){
 	Pixmap buffer = XCreatePixmap(dpy, root, SIZE*COL, SIZE*ROW, DefaultDepth(dpy, DefaultScreen(dpy)));
 
 	int i = 0, spawn_amount = 0;
-	unsigned int mass = 0;
-	while(i<2*1e7){
+	float mass = 0.0;
+	while(i<2*1e5){
 		XSetForeground(dpy, gc, 0x000000);
 		XFillRectangle(dpy, buffer, gc, 0, 0, SIZE*COL+1, SIZE*ROW+1);
-		for (int i = 0; i < ROW; i++)
-			for (int j = 0; j < COL; j++)
-				if (b.particles[i][j].exists){
-					XSetForeground(dpy, gc, b.particles[i][j].color);
-					XFillRectangle(dpy, buffer, gc, j*SIZE, (ROW-i-1)*SIZE, SIZE, SIZE);
+		for (int row = 0; row < ROW; row++)
+			for (int col = 0; col < COL; col++)
+				if (b.particles[row][col].exists){
+					XSetForeground(dpy, gc, b.particles[row][col].color);
+					XFillRectangle(dpy, buffer, gc, col*SIZE+1, (ROW-row-1)*SIZE+1, SIZE, SIZE);
 					}
 		particleStep(&b);
 		color = setColor(i, cdf);
-		mass = getColorIndex(color)+1;
+		// mass = (getColorIndex(color)+1)/300.0;
+		mass = 1/10.0;
 		spawn_amount = rand()%(COL/48);
 		for(int j=0; j<spawn_amount; j++)
-			spawnParticle(b.particles, ROW-1, spawn_col, mass, color);
+			spawnParticle(&b, ROW-2, spawn_col, mass, color);
 
 		clock_t now = clock();
         clock_t elapsed = now - last;

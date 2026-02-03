@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -O2
-LIBS = -lX11
+LIBS = -lm -lX11
 
 all: render
 
