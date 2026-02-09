@@ -39,7 +39,8 @@ int sample_cdf(int *cdf, int idx_max){
 }
 
 unsigned int setColor(int i, int *cdf){
-	int pam = 25000/SIZE;
+	return colors[rand()%COLOR_AMOUNT];
+	int pam = 25000/SIZE/5;
 	int idx = ((i%(pam*COLOR_AMOUNT))/pam)%COLOR_AMOUNT;
 	return colors[sample_cdf(cdf, idx)];
 }
@@ -87,9 +88,10 @@ int main(int argc, char *argv[]){
 					}
 		particleStep(&b);
 		color = setColor(i, cdf);
-		// mass = (getColorIndex(color)+1)/300.0;
-		mass = 1/10.0;
-		spawn_amount = rand()%(COL/48);
+		mass = (getColorIndex(color)+1)/30.0;
+		// mass = 1/30.0;
+		if(i<3*1e4) spawn_amount = rand()%(COL/48);
+		else spawn_amount = 0;
 		for(int j=0; j<spawn_amount; j++)
 			spawnParticle(&b, ROW-2, spawn_col, mass, color);
 
