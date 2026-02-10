@@ -126,6 +126,10 @@ void updateField(board *b, int row, int col, int prow, int pcol){
 }
 
 void collision(particle *a, particle *b){
+	double time, alpha = carg(a->speed), beta = carg(b->speed), theta, gamma, v1 = cabs(a->speed), v2 = cabs(b->speed);
+	time = 2.0/sqrt(v1*v1+v2*v2-2*v1*v2*cos(beta-alpha));
+	theta = asin(v1*time*sin(beta-alpha)/2.0);
+	gamma = theta+beta-M_PI;
 }
 
 void particleStep(board *b){
