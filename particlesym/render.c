@@ -1,7 +1,6 @@
 #include "particles.h"
 #include <X11/Xlib.h>
 
-#define SIZE 2
 #define FPS 15
 #define FRAME_TIME (CLOCKS_PER_SEC / FPS)
 
@@ -39,8 +38,7 @@ int sample_cdf(int *cdf, int idx_max){
 }
 
 unsigned int setColor(int i, int *cdf){
-	return colors[rand()%COLOR_AMOUNT];
-	int pam = 25000/SIZE/5;
+	int pam = 250/SIZE;
 	int idx = ((i%(pam*COLOR_AMOUNT))/pam)%COLOR_AMOUNT;
 	return colors[sample_cdf(cdf, idx)];
 }
@@ -60,10 +58,11 @@ int main(int argc, char *argv[]){
 	build_cdf(cdf);
 
 	if(argc > 2){
-		COL = atoi(argv[1])/SIZE;
-		ROW = atoi(argv[2])/SIZE;
+		COL = atoi(argv[1]);
+		ROW = atoi(argv[2]);
 	}
-	else exit(-1);
+	COL /= SIZE;
+	ROW = ROW/SIZE-25;
 	initOrders();
 
 	board b = initBoard();
@@ -73,7 +72,7 @@ int main(int argc, char *argv[]){
 	if (!dpy) return 1;
 	Window root = DefaultRootWindow(dpy);
 	GC gc = XCreateGC(dpy, root, 0, NULL);
-	Pixmap buffer = XCreatePixmap(dpy, root, SIZE*COL, SIZE*ROW, DefaultDepth(dpy, DefaultScreen(dpy)));
+	Pixmap buffer = XCreatePixmap(dpy, root, SIZE*COL, SIZE*ROW+1, DefaultDepth(dpy, DefaultScreen(dpy)));
 
 	int i = 0, spawn_amount = 0;
 	float mass = 0.0;
@@ -87,10 +86,18 @@ int main(int argc, char *argv[]){
 					XFillRectangle(dpy, buffer, gc, col*SIZE+1, (ROW-row-1)*SIZE+1, SIZE, SIZE);
 					}
 		particleStep(&b);
+		FILE *log = fopen("stuck.csv", "a");
+		for(int col = 0; col < COL; col++){
+		particle *p = &(b.particles[ROW-1][col]);
+		if(p->exists)
+			fprintf(log, "%d,%d,%f,%f,%f,%f\n", ROW-1, col, p->speed[0], p->speed[1], p->acel[0], p->acel[1]);
+		}
+		fclose(log);
+
 		color = setColor(i, cdf);
 		mass = (getColorIndex(color)+1)/30.0;
-		// mass = 1/30.0;
-		if(i<3*1e4) spawn_amount = rand()%(COL/48);
+
+		if(i<3*1e4) spawn_amount = rand()%(COL/SIZE/128);
 		else spawn_amount = 0;
 		for(int j=0; j<spawn_amount; j++)
 			spawnParticle(&b, ROW-2, spawn_col, mass, color);
@@ -102,7 +109,7 @@ int main(int argc, char *argv[]){
         }
         last = clock();
 		i+=spawn_amount;
-		XCopyArea(dpy, buffer, root, gc, 0, 0, SIZE*COL, SIZE*ROW+1, 1920, 0);
+			XCopyArea(dpy, buffer, root, gc, 0, 0, SIZE*COL, SIZE*ROW+1, 0, 0);
 		XFlush(dpy);
 	}
 
