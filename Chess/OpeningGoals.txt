@@ -1,0 +1,8 @@
+W: Vienna
+W: Alapin Sicilian
+W: Fantasy Caro-Kann
+W: Rubinstein French
+W: Scandi
+W: Jobava London
+B: Acelerated Dragon Sicilian
+B: King's Indian

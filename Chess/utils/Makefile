@@ -1,9 +1,12 @@
 CC=gcc
 
-all: treelogic.so
+all: treelogic.so treelogic
 
 treelogic.so: treelogic.c
-	$(CC) -shared -fPIC -o treelogic.so treelogic.c -lsqlite3
+	$(CC) -shared -fPIC -o treelogic.so treelogic.c
+
+treelogic: treelogic.c
+	$(CC) -o treelogic treelogic.c
 
 clear:
 	rm treelogic treelogic.so

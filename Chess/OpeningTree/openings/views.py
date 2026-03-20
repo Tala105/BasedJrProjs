@@ -3,7 +3,9 @@ from django.http import HttpResponse
 from .models import Move, Position
 from .forms import MoveForm
 from uuid import UUID
-from ...utils.chesslogic import make_move, nameToMove
+import sys
+sys.path.append('../utils')
+from chesslogic import make_move, nameToMove
 
 id0 = "00000000-0000-0000-0000-000000000000"
 starting_pos = Position.objects.get(id=id0)
