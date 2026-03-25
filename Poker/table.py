@@ -7,18 +7,20 @@ from constants import SUITS, RANKS, HAND_VALUES
 
 class Table:
     def __init__(self, num_players: int, base_chips: int = 1000):
-        """A class representing the table in a poker game."""
         self.num_players = num_players
         self.base_chips = base_chips
         self.blind: int = 10
-        self.min_bet = self.blind
-        self.pots: list[int] = [0]
-        self.active_player = 0
+        self.reset()
+
+    def reset(self) -> None:
         self.round = 1
+        self.active_player = 0
         self.last_better = 0
-        self.deck: list[Card] = self.create_deck()
-        self.players: list[Hand] = self.create_players()
-        self.community_cards: Hand = self.create_community_cards()
+        self.min_bet = self.blind
+        self.pots = [0]
+        self.deck = self.create_deck()
+        self.players = self.create_players()
+        self.community_cards = self.create_community_cards()
 
     def create_deck(self) -> list[Card]:
         """Creates a deck of cards."""
@@ -52,6 +54,12 @@ class Table:
         winner = ordered_hands[0]
         print(f"{winner.name} wins with {winner.hand_value()}!")
         print(f"Winning hand: \n{winner.make_visual()}")
+        restart: str = "nop"
+        while restart != "":
+            restart = input("Press Enter to start Next Game, or exit to stop: ").strip().lower()
+            if any(c in "exit" for c in restart):
+                exit()
+        self.reset()
 
 
     def fold(self) -> None:
@@ -123,6 +131,8 @@ class Table:
         for player in self.players:
             player.betted = 0
         self.min_bet = self.blind
+        self.active_player = 0
+        self.last_better = 0
         self.round += 1
         print(f"Starting round {self.round}.")
         sleep(1)
