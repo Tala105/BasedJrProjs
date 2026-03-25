@@ -5,30 +5,35 @@
 #include <unistd.h>
 #include <time.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
-#define true 1
-#define false 0
-#define SIZE 1
+#define SIZE 2
+#define GRAVITY 0.5f
+#define SOFT_CAP 2
+#define HARD_CAP 4
+#define FIELD_RADIUS 16
+#define FIELD_CONSTANT 0.01
+#define ELASTIC_CONSTANT 0.6f
 
-typedef char bool;
 typedef struct particle{
-	float mass;
-	double acel[2];
-	double speed[2];
-	double pressure;
-	bool exists;
-	bool closed;
-	unsigned long color;
+    float mass;
+    float acel[2];
+    float speed[2];
+	int count;
+    bool exists;
+    bool closed;
+    unsigned long color;
 }particle;
 
 typedef struct board{
-	particle **particles;
-	double (**field)[2];
+    particle *particles;
+    float *field;
 }board;
 
-extern int ROW, COL;
-
+void initDimensions(int row, int col);
 board initBoard();
-void spawnParticle(board *b, int row, int col, float mass, int color);
-void particleStep(board *b);
 void initOrders();
+void spawnParticles(board b, int row, float mass, int color, int count);
+void particleStep(board *b);

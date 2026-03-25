@@ -15,7 +15,7 @@ class Table:
         self.pots: list[int] = [0]
         self.active_player = 0
         self.round = 1
-        self.last_better = self.num_players-1
+        self.last_better = 0
         self.deck: list[Card] = self.create_deck()
         self.players: list[Hand] = self.create_players()
         self.community_cards: Hand = self.create_community_cards()
@@ -97,19 +97,23 @@ class Table:
         """Handles the player's raise action."""
         player = self.players[self.active_player]
         while True:
-            amount = int(input("Enter the amount to raise: "))
-            if amount == player.chips:
-                self.all_in()
-                return
-            if amount > self.min_bet and amount <= player.chips:
-                player.chips -= amount
-                player.betted += amount
-                self.pots[-1] += amount
-                self.min_bet = amount
-                print(f"{player.name} raises the bet by {amount}. Remaining chips: {player.chips}")
-                return
+            try:
+                amount = int(input("Enter the amount to raise: "))
+            except ValueError:
+                print("Incorrect input type, input a integer amount")
             else:
-                print(f"Invalid amount. You must raise more than {self.min_bet} and less than or equal to your chips ({player.chips}).")
+                if amount == player.chips:
+                    self.all_in()
+                    return
+                if amount > self.min_bet and amount <= player.chips:
+                    player.chips -= amount
+                    player.betted += amount
+                    self.pots[-1] += amount
+                    self.min_bet = amount
+                    print(f"{player.name} raises the bet by {amount}. Remaining chips: {player.chips}")
+                    return
+                else:
+                    print(f"Invalid amount. You must raise more than {self.min_bet} and less than or equal to your chips ({player.chips}).")
         
 
     def next_round(self, gone_all_in: bool) -> None:
@@ -129,57 +133,53 @@ class Table:
         if self.round == 5:
             print("All rounds completed. Evaluating hands...")
             self.winning_hand()
-            print("Beginning a new game...")            
+            print("Beginning a new game...")
             return
+
         self.min_bet = self.blind
         gone_all_in = False
-        
-        # Loops through players for betting, until the last to act is the one before the last to raise the min bet
+
         while True:
             player = self.players[self.active_player]
             os.system('cls' if os.name == 'nt' else 'clear')
             self.show_community_card()
             print(f"Round {self.round}: {player.name}'s turn to bet. Chips: {player.chips}")
             print(player.make_visual())
-            print(f"Current pot: {(self.pots)}, Minimum bet: {self.min_bet}")
-            
-            if self.players[self.active_player].id == self.last_better + 1:
-                break
-
+            print(f"Current pot: {self.pots}, Minimum bet: {self.min_bet}")
 
             if player.status == "folded" or player.status == "all-in":
-                print(f"{player.name} turn is skipped.")
-                self.active_player = (self.active_player + 1) % self.num_players
+                print(f"{player.name}'s turn is skipped.")
                 sleep(1)
-                continue
+            else:
+                while True:
+                    if in_game_players == 1:
+                        break
+                    action = input("Choose action (call, raise, all_in, fold): ").strip().lower()
+                    if action == "call":
+                        self.call()
+                        break
+                    elif action == "raise":
+                        self.raise_bet()
+                        self.last_better = self.active_player
+                        break
+                    elif action == "all_in" and in_game_players > 1:
+                        self.all_in()
+                        if player.chips == 0:
+                            in_game_players -= 1
+                            gone_all_in = True
+                            self.last_better = self.active_player
+                        break
+                    elif action == "fold" and in_game_players > 1:
+                        in_game_players -= 1
+                        self.fold()
+                        break
+                    else:
+                        print("Invalid action. Please try again.")
 
-            # Waits for the player for a valid action 
-            while True:
-                # Prompts the player for an action
-                if in_game_players == 1:
-                    break
-                action = input("Choose action (call, raise, all_in, fold): ").strip().lower()
-                if action == "call":
-                    self.call()
-                    break
-                if action == "raise":
-                    self.raise_bet()
-                    self.last_better = (self.active_player - 1) % self.num_players
-                    break
-                if action == "all_in" and in_game_players > 1:
-                    in_game_players -= 1
-                    self.all_in()
-                    if player.chips == 0:
-                        gone_all_in = True
-                        self.last_better = (self.active_player - 1) % self.num_players
-                    break
-                if action == "fold" and in_game_players > 1:
-                    in_game_players -= 1
-                    self.fold()
-                    break
-                print("Invalid action. Please try again.")
-            # Goes to the next player
             self.active_player = (self.active_player + 1) % self.num_players
+            if self.active_player == self.last_better:
+                break
+
         self.next_round(gone_all_in)
 
     def show_community_card(self) -> None:
